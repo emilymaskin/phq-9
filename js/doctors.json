@@ -1,0 +1,9 @@
+{
+  "doctors": [{
+    "name": "Dr. John Doe"
+  }, {
+    "name": "Dr. Sally Jones"
+  }, {
+    "name": "Dr. Jane Smith"
+  }]
+}
