@@ -19,6 +19,7 @@ h1 {
 }
 .page_content {
   padding: 0 30px;
+  box-sizing: border-box;
   width: 480px;
   max-width: 100%;
   margin: 0 auto;
