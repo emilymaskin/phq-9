@@ -2,77 +2,114 @@
   'use strict';
 
   var Questionnaire = React.createClass({
-    score: 0,
-    message: 'You scored ',
-    calculateScore: function() {
-      for (var i=0; i<this.answers.length; i++) {
-        this.score += parseInt(this.answers[i].value)
+
+    getInitialState: function() {
+      return {
+        score: 0,
+        message: '',
+        error: false,
+        showQuestions: true
       }
     },
-    buildResultsMessage: function() {
-      if (this.score <= 4) {
-        this.message += this.score + ' (no depression).';
-      } else if (this.score <= 9) {
-        this.message += this.score + ' (mild depression).';
-      } else if (this.score <= 14) {
-        this.message += this.score + ' (moderate depression).';
-      } else if (this.score <= 19) {
-        this.message += this.score + ' (moderately severe depression).';
+
+    componentDidUpdate: function() {
+      ReactDOM.render(
+        <Message text={this.state.message} className={this.state.error ? 'error' : ''} />,
+        document.querySelector('.messaging')
+      );
+    },
+
+    calculateScore: function(answers) {
+      var score = this.state.score;
+      for (var i=0; i<answers.length; i++) {
+        score += parseInt(answers[i].value);
+      }
+      return score;
+    },
+
+    buildResultsMessage: function(score) {
+      var message = 'You scored ';
+      if (score <= 4) {
+        message += score + ' (no depression).';
+      } else if (score <= 9) {
+        message += score + ' (mild depression).';
+      } else if (score <= 14) {
+        message += score + ' (moderate depression).';
+      } else if (score <= 19) {
+        message += score + ' (moderately severe depression).';
       } else {
-        this.message += this.score + ' (severe depression).';
+        message += score + ' (severe depression).';
       }
+      return message;
     },
+
     showDoctors: function() {
-      this.message = this.message + " Please choose a doctor to get in touch with:"
-      this.showMessage();
+      var _this = this;
 
-      $(document).ready(function(){
-        $.getJSON('js/doctors.json', function(data) {
-          var doctors = data["doctors"];
+      $.getJSON('js/doctors.json', function(data) {
+        var doctors = data["doctors"];
+        var message = _this.state.message + " Please choose a doctor to get in touch with:";
 
-          ReactDOM.render(
-            <div className="doctors">
-              {doctors.map(function(d, i) {
-                return <Doctor key={i} name={d.name} />;
-              })}
-            </div>, document.querySelector('.page_content')
-          );
-        });
+        _this.setState({message: message});
+
+        ReactDOM.render(
+          <div>
+            {doctors.map(function(d, i) {
+              return <Doctor key={i} name={d.name} onclick={_this.submitDoctor} />;
+            })}
+          </div>, document.querySelector('.doctors')
+        );
       });
     },
-    showMessage: function(className) {
-      ReactDOM.render(
-        <Message text={this.message} className={className} />,
-        document.querySelector('.messaging')
-      )
-      $('html, body').animate({ scrollTop: 0 }, 500);
+
+    showConfirmation: function(name) {
+      var message = "Thank you. " + name + " will be in touch with you soon!";
+
+      this.setState({message: message});
+
+      ReactDOM.unmountComponentAtNode(document.querySelector('.doctors'));
     },
+
+    submitDoctor: function(e) {
+      var doctorName = $(e.target).text();
+
+      // here we would submit the doctor and patient info to the back end
+
+      this.showConfirmation(doctorName);
+    },
+
     processForm: function(e) {
       e.preventDefault();
-      this.answers = $(e.target).serializeArray();
 
-      if (this.answers.length < $(e.target).find('.choices').length) {
-        this.message = "Please answer all the questions."
-        this.showMessage("error")
+      var answers = $(e.target).serializeArray();
+      var score;
+      var message;
+
+      if (answers.length < $(e.target).find('.choices').length) {
+        this.setState({message: 'Please answer all the questions.', error: true});
       } else {
-        this.calculateScore();
-        this.buildResultsMessage();
-        if (this.score > 10) {
-          this.showDoctors();
-        } else {
-          this.showMessage();
-          ReactDOM.unmountComponentAtNode(document.querySelector('.page_content'));
-        }
+        score = this.calculateScore(answers);
+        message = this.buildResultsMessage(score);
+        this.setState({score: score, message: message, error: false, showQuestions: false}, function() {
+           if (this.state.score >= 10) {
+             this.showDoctors();
+           }
+        })
       }
     },
+
     render: function() {
       return (
-        <form className='questions' onSubmit={this.processForm}>
+        <div>
+        <form className={'questions' + (this.state.showQuestions ? ' show' : '')} onSubmit={this.processForm}>
+          Over the last two weeks, how often have you been bothered by any of the following problems?
           {this.props.questions.map(function(q, i){
             return <Question key={i} question={q.text} score={q.score} questionNum={i + 1} />;
           })}
           <input type="submit" className="submit" value="Go" />
         </form>
+        <div className="doctors"></div>
+        </div>
       );
     }
   });
@@ -107,23 +144,9 @@
   });
 
   var Doctor = React.createClass({
-    showConfirmation: function(name) {
-      var message = "Thank you. " + name + " will be in touch with you soon!";
-      ReactDOM.render(
-        <Message text={message} />, document.querySelector('.messaging')
-      );
-      ReactDOM.unmountComponentAtNode(document.querySelector('.page_content'));
-    },
-    submitDoctor: function(e) {
-      var doctorName = $(e.target).text();
-
-      // here we would submit the doctor and patient info to the back end
-
-      this.showConfirmation(doctorName);
-    },
     render: function() {
       return (
-        <div className="doctor" onClick={this.submitDoctor}>
+        <div className="doctor" onClick={this.props.onclick}>
           {this.props.name}
         </div>
       );
@@ -142,8 +165,7 @@
     $.getJSON('js/questions.json', function(data) {
       var questions = data["questions"];
       ReactDOM.render(
-        <div>Over the last two weeks, how often have you been bothered by any of the following problems?
-        <Questionnaire questions={questions} /></div>,
+        <Questionnaire questions={questions} />,
         document.querySelector('.page_content')
        );
     });

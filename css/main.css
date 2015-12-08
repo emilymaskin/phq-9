@@ -4,16 +4,36 @@
   padding: 0;
 }
 body {
-  width: 320px;
-  margin: 20px auto;
   color: #0071BC;
   font-family: Roboto, 'Open Sans', Arial, sans-serif;
   line-height: 1.5em;
   letter-spacing: 0.3px;
-  font-size: 14px;
+  font-size: 18px;
+}
+h1 {
+  background: #0071BC;
+  color: #fff;
+  padding: 20px;
+  line-height: 1.5em;
+  font-size: 26px;
+}
+.page_content {
+  padding: 0 30px;
+  width: 480px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.messaging {
+  padding: 20px 30px;
 }
 .messaging .error {
   color: #f00;
+}
+.questions {
+  display: none;
+}
+.questions.show {
+  display: block;
 }
 .question {
   margin: 20px 0;
@@ -34,9 +54,10 @@ body {
   border-radius: 5px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-size: 16px;
-  margin: 0 auto;
+  font-size: 18px;
+  margin: 40px auto;
   display: block;
+  cursor: pointer;
 }
 .doctors {
   text-align: center;
@@ -47,4 +68,5 @@ body {
   padding: 20px;
   width: 200px;
   margin: 10px auto;
+  cursor: pointer;
 }
