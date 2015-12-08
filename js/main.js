@@ -17,8 +17,13 @@
         <Message text={this.state.message} className={this.state.error ? 'error' : ''} />,
         document.querySelector('.messaging')
       );
+      $('html, body').animate({ scrollTop: 0 }, 500);
     },
 
+    /**
+     * Determine the score the user received
+     * @param {Object[]} answers - the serialized form data
+     */
     calculateScore: function(answers) {
       var score = this.state.score;
       for (var i=0; i<answers.length; i++) {
@@ -27,6 +32,10 @@
       return score;
     },
 
+    /**
+     * Determine the message to show the user
+     * @param {number} score - the user's score
+     */
     buildResultsMessage: function(score) {
       var message = 'You scored ';
       if (score <= 4) {
@@ -43,6 +52,9 @@
       return message;
     },
 
+    /**
+     * Get and display list of doctors for user to choose from
+     */
     showDoctors: function() {
       var _this = this;
 
@@ -62,6 +74,10 @@
       });
     },
 
+    /**
+     * Show the user a message saying the doctor will get in touch
+     * @param {string} name - the name of the doctor the user selected
+     */
     showConfirmation: function(name) {
       var message = "Thank you. " + name + " will be in touch with you soon!";
 
@@ -70,27 +86,41 @@
       ReactDOM.unmountComponentAtNode(document.querySelector('.doctors'));
     },
 
+    /**
+     * This is where we would submit the doctor/patient info to the back end,
+     * if we had a back end
+     */
     submitDoctor: function(e) {
       var doctorName = $(e.target).text();
 
-      // here we would submit the doctor and patient info to the back end
+      // submit info
 
       this.showConfirmation(doctorName);
     },
 
+    /**
+     * Validate questionnaire and show message, plus list of doctors if applicable
+     */
     processForm: function(e) {
-      e.preventDefault();
-
       var answers = $(e.target).serializeArray();
       var score;
       var message;
 
+      e.preventDefault();
+
       if (answers.length < $(e.target).find('.choices').length) {
+        // if user has answered fewer questions than the total number
         this.setState({message: 'Please answer all the questions.', error: true});
       } else {
         score = this.calculateScore(answers);
         message = this.buildResultsMessage(score);
-        this.setState({score: score, message: message, error: false, showQuestions: false}, function() {
+
+        this.setState({
+          score: score,
+          message: message,
+          error: false,
+          showQuestions: false
+        }, function() {
            if (this.state.score >= 10) {
              this.showDoctors();
            }
@@ -101,19 +131,22 @@
     render: function() {
       return (
         <div>
-        <form className={'questions' + (this.state.showQuestions ? ' show' : '')} onSubmit={this.processForm}>
-          Over the last two weeks, how often have you been bothered by any of the following problems?
-          {this.props.questions.map(function(q, i){
-            return <Question key={i} question={q.text} score={q.score} questionNum={i + 1} />;
-          })}
-          <input type="submit" className="submit" value="Go" />
-        </form>
+          <form className={'questions' + (this.state.showQuestions ? ' show' : '')} onSubmit={this.processForm}>
+            Over the last two weeks, how often have you been bothered by any of the following problems?
+            {this.props.questions.map(function(q, i){
+              return <Question key={i} question={q.text} score={q.score} questionNum={i + 1} />;
+            })}
+            <input type="submit" className="submit" value="Go" />
+          </form>
         <div className="doctors"></div>
         </div>
       );
     }
   });
 
+  /**
+   * Question Class creates each question in the questionnaire
+  */
   var Question = React.createClass({
     render: function() {
       var name = "q" + this.props.questionNum;
@@ -131,6 +164,9 @@
     }
   });
 
+  /**
+   * Choice Class creates each choice for each question
+  */
   var Choice = React.createClass({
     render: function() {
       var id = this.props.name + this.props.value; //unique ID for each input
@@ -143,6 +179,9 @@
     }
   });
 
+  /**
+   * Doctor Class creates element with info about a doctor the patient can choose
+  */
   var Doctor = React.createClass({
     render: function() {
       return (
@@ -153,6 +192,9 @@
     }
   });
 
+  /**
+   * Message Class handles user messaging at top of screen
+  */
   var Message = React.createClass({
     render: function() {
       return (
@@ -161,6 +203,9 @@
     }
   });
 
+  /**
+   * When document is loaded, get and render questions
+  */
   $(document).ready(function(){
     $.getJSON('js/questions.json', function(data) {
       var questions = data["questions"];
